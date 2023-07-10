@@ -12,18 +12,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import  IsAuthenticated
 from.permissions import IsLibrarian
+from rest_framework.views import APIView
 
 
 class RegisterView(generics.CreateAPIView):
-    qs = User.objects.all()
+    qs= User.objects.all()
     serializer_class = RegisterSeralizer
 
 
 class LoginView(generics.CreateAPIView):
-    permission_classes = (AllowAny,)
     serializer_class = LoginSerializer
+    permission_classes = [AllowAny]
 
     def post(self,request,*args,**kwargs):
         try:
@@ -33,15 +34,51 @@ class LoginView(generics.CreateAPIView):
         
         if check_password(request.data['password'],user.password):
             token, created = Token.objects.get_or_create(user=user)
-            return Response({'token': token.key}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({'token': token.key})
+        else:
+            return Response({'error': 'password is invalid'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+    authentication_classes =[TokenAuthentication] 
+
+    def post(self, request):
+        # Get the user's token
+        token = request.auth
+
+        if token:
+            # Delete the token
+            token.delete()
+            return Response({'detail': 'Logout successful.'})
         
-    
+        return Response({'detail': 'No token found.'}, status=400)
         
+          
 class MemberView(viewsets.ModelViewSet):
-    queryset = User.objects.filter(user_type='member')
-    serializer_class = MemberSeralizer
+    queryset = User.objects.all()
+    serializer_class = RegisterSeralizer
     authentication_classes =[TokenAuthentication]
-    permission_classes = [IsLibrarian]
+    # permission_classes = (IsLibrarian)
+
+def update(self, request, *args, **kwargs):
+        member = self.get_object()
+        request.data ['user_type'] = 'librarian'
+        serializer = RegisterSeralizer(member, partial=True, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response({'message':'successfully updated'}, status=status.HTTP_201_CREATED)
+
+def delete(self,request,*args,**kwargs):
+        request.data ['user_type'] = 'librarian'
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({'message': 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
+
+    
+
+
 
 
 

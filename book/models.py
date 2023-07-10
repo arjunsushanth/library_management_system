@@ -6,11 +6,9 @@ from user.models import User
 class Book(models.Model):
 
     title = models.CharField(max_length=100,unique=True)
-    purchaised_by = models.ForeignKey(User,on_delete=models.CASCADE)
     author = models.CharField(max_length=200)
     price = models.PositiveIntegerField()
-    image = models.ImageField(upload_to='book_images')
-    is_active = models.BooleanField(default=True)
+    image = models.ImageField(upload_to='book_images',null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     count = models.IntegerField(default=0)
     language = models.CharField(max_length=250)
@@ -36,8 +34,8 @@ class BorrowedBook(models.Model):
 class BookTransaction(models.Model):
 
     STATUS = [
-              ('RETURNED','returned'),
-              ('RENTED','rented'),
+              ('returned','RETURNED'),
+              ('rented','RENTED'),
               ]
 
     book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='transaction_book')
