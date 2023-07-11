@@ -1,13 +1,12 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import BorrowedBookView,BookListView,BookCreateView,BookUpdateView,BookDeleteView,BorrowedBookListView
+from .views import BorrowedBookView,BookListView,BookCreateView,BookUpdateView,BookDeleteView,BorrowedBookListView,BookTranscationView
 
 
 
 router = DefaultRouter()
-# router.register('bookname',BookView, basename='bookname')
-# router.register('borrowedbook',BorrowedBookView,basename='aproval')
-router.register('borrowedbooks',BorrowedBookView,basename='borrowedbooks')
+router.register('borrowedbooks',BorrowedBookView,basename='borrowedbooks'),
+router.register('booktranscation',BookTranscationView,basename='booktranscation'),
 
 
 urlpatterns = [

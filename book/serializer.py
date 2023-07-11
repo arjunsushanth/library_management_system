@@ -23,8 +23,8 @@ class BorrowedBookSerializer(serializers.ModelSerializer):
 
 class BookTranscationSeralizer(serializers.ModelSerializer):
 
-    book_id = BookSerializer(read_only=True)
-    user_id = UserSeralizer(read_only = True)
+    # book_id = BookSerializer(read_only=True)
+    # user_id = UserSeralizer(read_only = True)
 
     class Meta:
         model = BookTransaction

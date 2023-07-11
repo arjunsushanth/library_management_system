@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from user.permissions import IsLibrarian
 from rest_framework.permissions import IsAdminUser,IsAuthenticated
+from rest_framework.authentication import BasicAuthentication
 from user import models
 from book.pricing import Pricing
 import datetime
@@ -92,21 +93,30 @@ class BorrowedBookView(viewsets.ModelViewSet):
 class BookTranscationView(viewsets.ModelViewSet):   
     serializer_class = BookTranscationSeralizer
     queryset = BookTransaction.objects.all()
-    authentication_classes = [authentication]
+    authentication_classes =[BasicAuthentication]
     
-    def return_book(self, request, pk=None):
+    @action(detail=True, methods=['post'])
+    def return_book(self, request,*args,**kwargs):
         rental_request = self.get_object()
-        rental_request.approval_status = 'returned'
+        rental_request.status = 'returned'
+        rental_request.returned_date = datetime.datetime.now()
         rental_request.save()
 
         # Calculate fine for late returns
         borroweddate = rental_request.borrowed_date
         returned_date = datetime.datetime.now()
         fine = Pricing.calculate_price(borroweddate, returned_date)
+        rental_request.fine = fine if fine is not None else 0
 
-        return Response({"message": "Book returned successfully", "fine": fine},
-                        status=status.HTTP_200_OK)
-    
+        return Response({
+            "id": rental_request.id,
+            "status": rental_request.status,
+            "borrowed_date": rental_request.borrowed_date,
+            "returned_date": rental_request.returned_date,
+            "book": rental_request.book.id,
+            "user": rental_request.user.id,
+            "fine": rental_request.fine,
+        }, status=status.HTTP_200_OK)
 
 
 class BorrowedBookListView(generics.ListAPIView):
