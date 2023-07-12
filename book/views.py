@@ -27,8 +27,6 @@ class BookCreateView(generics.CreateAPIView):
     permission_classes = [IsLibrarian]
     
     def post(self, request, *args, **kwargs):
-        request.data ['user_type'] = 'librarian'
-        request.data ['username']  = request.user.id
         serializer = self.serializer_class(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -43,7 +41,6 @@ class BookUpdateView(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         book = self.get_object()
-        request.data ['user_type'] = 'librarian'
         serializer = BookSerializer(book, partial=True, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -74,15 +71,14 @@ class BorrowedBookView(viewsets.ModelViewSet):
         if not book:
             return Response({"error": "Book is not available"}, status=status.HTTP_404_NOT_FOUND)
 
-        if BorrowedBook.objects.filter(user_id=user, book_id=book).exists():
-            return Response({"error": "Member already has the book"}, status=status.HTTP_400_BAD_REQUEST)
+        if BorrowedBook.objects.filter(book_id=book,status ='aproved').exists():
+            return Response({"error": "Book is already rented"}, status=status.HTTP_400_BAD_REQUEST)
 
         if book.count == 0:
             return Response({"error": "Book is out of stock"}, status=status.HTTP_400_BAD_REQUEST)
 
-        rental_request = BorrowedBook.objects.create(user_id=user, book_id=book)
+        rental_request = BorrowedBook.objects.create(user_id=user, book_id=book, approval_status ='pending')
         book.count = book.count - 1
-        # rental_request.aproval = 'APPROVED'
 
         book.save()
 
@@ -91,31 +87,36 @@ class BorrowedBookView(viewsets.ModelViewSet):
     
 
 class BookTranscationView(viewsets.ModelViewSet):   
-    serializer_class = BookTranscationSeralizer
-    queryset = BookTransaction.objects.all()
-    authentication_classes =[BasicAuthentication]
+    serializer_class = BorrowedBookSerializer
+    queryset = BorrowedBook.objects.all()
+    authentication_classes =[authentication.TokenAuthentication]
     
     @action(detail=True, methods=['post'])
     def return_book(self, request,*args,**kwargs):
-        rental_request = self.get_object()
-        rental_request.status = 'returned'
-        rental_request.returned_date = datetime.datetime.now()
-        rental_request.save()
+        borrowed_book = self.get_object()
+        transaction_obj = BookTransaction()
+        transaction_obj.status = 'returned'
+        transaction_obj.returned_date = datetime.datetime.now()
+        transaction_obj.borrowed_book = borrowed_book
+        transaction_obj.user = request.user
+        book =borrowed_book.book_id
+        book.count += 1
+        book.save()
+        transaction_obj.save()
 
         # Calculate fine for late returns
-        borroweddate = rental_request.borrowed_date
+        borroweddate = transaction_obj.borrowed_date
         returned_date = datetime.datetime.now()
         fine = Pricing.calculate_price(borroweddate, returned_date)
-        rental_request.fine = fine if fine is not None else 0
-
+        transaction_obj.fine = fine if fine is not None else 0
         return Response({
-            "id": rental_request.id,
-            "status": rental_request.status,
-            "borrowed_date": rental_request.borrowed_date,
-            "returned_date": rental_request.returned_date,
-            "book": rental_request.book.id,
-            "user": rental_request.user.id,
-            "fine": rental_request.fine,
+            "id": transaction_obj.id,
+            "status": transaction_obj.status,
+            "borrowed_date": transaction_obj.borrowed_date,
+            "returned_date": transaction_obj.returned_date,
+            "book": book.id,
+            "user": transaction_obj.user.id,
+            "fine": transaction_obj.fine,
         }, status=status.HTTP_200_OK)
 
 
@@ -124,6 +125,23 @@ class BorrowedBookListView(generics.ListAPIView):
     serializer_class = BorrowedBookSerializer
     authentication_classes =[authentication.TokenAuthentication]
     permission_classes = [IsLibrarian]
+
+
+class BookBorrowAproveRejectView(generics.UpdateAPIView):
+    queryset =BorrowedBook.objects.all()
+    serializer_class = BorrowedBookSerializer
+    permission_classes = [IsLibrarian]
+
+    def update(self, request, *args, **kwargs):
+        book = self.get_object()
+        print("book1",book)
+        serializer = BorrowedBookSerializer(book, partial=True, data=request.data)
+        if serializer.is_valid():
+           obj = serializer.save()
+           return Response(serializer.data)
+        return Response({'message':f'successfully {obj.approval_status}' }, status=status.HTTP_201_CREATED)
+    
+
 
   
 

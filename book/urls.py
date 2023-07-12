@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import BorrowedBookView,BookListView,BookCreateView,BookUpdateView,BookDeleteView,BorrowedBookListView,BookTranscationView
+from .views import BorrowedBookView,BookListView,BookCreateView,BookUpdateView,BookDeleteView,BorrowedBookListView,BookTranscationView,BookBorrowAproveRejectView
 
 
 
@@ -15,6 +15,7 @@ urlpatterns = [
     path('bookupdate/<int:pk>/',BookUpdateView.as_view(), name='book_update'),
     path('delete/<int:pk>/',BookDeleteView.as_view(),name='book_delete'),
     path('borrowedbooklist/',BorrowedBookListView.as_view(),name='borrowedbook_list'),
+    path('aprovalreject/<int:pk>/',BookBorrowAproveRejectView.as_view(),name='aproval_reject')
     
    
 ]+router.urls

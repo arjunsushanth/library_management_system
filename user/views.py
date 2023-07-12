@@ -59,11 +59,10 @@ class MemberView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSeralizer
     authentication_classes =[TokenAuthentication]
-    # permission_classes = (IsLibrarian)
+    permission_classes = (IsLibrarian)
 
 def update(self, request, *args, **kwargs):
         member = self.get_object()
-        request.data ['user_type'] = 'librarian'
         serializer = RegisterSeralizer(member, partial=True, data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -71,7 +70,6 @@ def update(self, request, *args, **kwargs):
         return Response({'message':'successfully updated'}, status=status.HTTP_201_CREATED)
 
 def delete(self,request,*args,**kwargs):
-        request.data ['user_type'] = 'librarian'
         instance = self.get_object()
         self.perform_destroy(instance)
         return Response({'message': 'Successfully deleted'}, status=status.HTTP_204_NO_CONTENT)
