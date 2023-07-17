@@ -59,7 +59,7 @@ class MemberView(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = RegisterSeralizer
     authentication_classes =[TokenAuthentication]
-    permission_classes = (IsLibrarian)
+    # permission_classes = (IsLibrarian)
 
 def update(self, request, *args, **kwargs):
         member = self.get_object()

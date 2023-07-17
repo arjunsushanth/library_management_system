@@ -13,8 +13,7 @@ class User(AbstractUser):
     ('member', 'MEMBER'),
     ('librarian', 'LIBRARIAN'),
     ]
-
-    user_type = models.CharField(choices=USER_TYPE,max_length=250,)
+    user_type = models.CharField(choices=USER_TYPE,max_length=250,default='member')
     created_at = models.DateTimeField(auto_now_add=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True, blank=True)
 

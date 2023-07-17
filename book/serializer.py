@@ -7,10 +7,7 @@ class BookSerializer(serializers.ModelSerializer):
         model = Book
         fields = '__all__'
 
-    
-class UserSeralizer(serializers.ModelSerializer):
-    model = User
-    fields = '__all__'
+
 
 class BorrowedBookSerializer(serializers.ModelSerializer):
 

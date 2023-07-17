@@ -45,11 +45,8 @@ class BookTransaction(models.Model):
     borrowed_date = models.DateTimeField(auto_now_add=True)
     returned_date = models.DateTimeField(null=True)
     
-
-    
-
     def __str__(self):
-        return self.book.title
+        return self.borrowed_book.book_id.title
 
     
 

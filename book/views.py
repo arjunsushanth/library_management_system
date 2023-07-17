@@ -71,7 +71,7 @@ class BorrowedBookView(viewsets.ModelViewSet):
         if not book:
             return Response({"error": "Book is not available"}, status=status.HTTP_404_NOT_FOUND)
 
-        if BorrowedBook.objects.filter(book_id=book,status ='aproved').exists():
+        if BorrowedBook.objects.filter(book_id=book,approval_status ='aproved').exists():
             return Response({"error": "Book is already rented"}, status=status.HTTP_400_BAD_REQUEST)
 
         if book.count == 0:
@@ -99,10 +99,13 @@ class BookTranscationView(viewsets.ModelViewSet):
         transaction_obj.returned_date = datetime.datetime.now()
         transaction_obj.borrowed_book = borrowed_book
         transaction_obj.user = request.user
-        book =borrowed_book.book_id
+        transaction_obj.save()
+        book = borrowed_book.book_id
         book.count += 1
         book.save()
-        transaction_obj.save()
+        borrowed_book.approval_status='rejected'
+        borrowed_book.save()
+
 
         # Calculate fine for late returns
         borroweddate = transaction_obj.borrowed_date
@@ -134,7 +137,7 @@ class BookBorrowAproveRejectView(generics.UpdateAPIView):
 
     def update(self, request, *args, **kwargs):
         book = self.get_object()
-        print("book1",book)
+        # print("book1",book)
         serializer = BorrowedBookSerializer(book, partial=True, data=request.data)
         if serializer.is_valid():
            obj = serializer.save()
